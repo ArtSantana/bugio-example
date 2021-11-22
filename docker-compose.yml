@@ -1,0 +1,40 @@
+version: '2.1'
+services:
+  bugio-example:
+    image: bugio-example
+    container_name: bugio-example
+    mem_limit: 1024m
+    build: .
+    ports:
+      - "8080:8080"
+    restart: on-failure
+    depends_on:
+      - bugio-mysql
+    env_file:
+      - .env
+    networks:
+      default:
+  bugio-mysql:
+    image: mysql:5.7
+    container_name: bugio-mysql
+    mem_limit: 256m
+    environment:
+      MYSQL_ROOT_PASSWORD: bugio
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+    volumes:
+      - ./mysql/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - bugio-example:/var/lib/mysql
+    networks:
+      default:
+volumes:
+  bugio-example:
+networks:
+  default:
+    external:
+      name: bugio-example
